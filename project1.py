@@ -78,10 +78,13 @@ def main(image_name):
     cv2.imwrite(f'result/{image_name}_output_matches.jpg', img_matches)
 
     # 4. implement RANSAC algorithm to compute the homography matrix. (DIY) RANSAC 알고리즘으로 homography matrix 계산
-    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches])
+    dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches])
 
-    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    # RANSAC을 사용하여 homography 행렬 계산
+    data = np.hstack((src_pts, dst_pts))
+    max_iterations = calculate_ransac_iterations()
+    M = ransac_homography(data, max_iterations, 5.0)
 
     # 5. prepare a panorama image of larger size (DIY) 더 큰 크기의 파노라마 이미지 준비
     h1, w1, _ = img1.shape
@@ -98,5 +101,5 @@ def main(image_name):
     print(f"{image_name} 처리 완료!")
 
 if __name__=='__main__':
-    for i in range(8,9):
+    for i in range(1,9):
         main(f'image{i}')
