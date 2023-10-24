@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 from ransac_homography import ransac_homography, calculate_ransac_iterations, apply_homography
+import os
 
 def warpImages(img1, img2, H):
     # 이미지의 행과 열 크기를 가져옵니다.
@@ -41,10 +42,20 @@ def warpImages(img1, img2, H):
     transformed_coords = np.dot(np.linalg.inv(H), homogeneous_coords)
     transformed_coords /= transformed_coords[2]
 
-    x_src, y_src = transformed_coords[0].astype(int), transformed_coords[1].astype(int)
+    x_src, y_src = transformed_coords[0], transformed_coords[1]
 
     # 변환된 좌표가 img2 내에 있는지 확인하는 마스크를 생성합니다.
     mask = (0 <= x_src) & (x_src < cols2) & (0 <= y_src) & (y_src < rows2)
+
+    # 추가적으로, 변환된 좌표가 유효한지 (NaN 또는 무한대 값이 아닌지) 확인하는 마스크를 생성합니다.
+    valid_mask = ~np.isnan(x_src) & ~np.isnan(y_src) & ~np.isinf(x_src) & ~np.isinf(y_src)
+
+    # 두 마스크를 결합합니다.
+    final_mask = mask & valid_mask
+
+    # 마스크를 사용하여 유효한 좌표만 정수로 변환합니다.
+    x_src = x_src[final_mask].astype(int)
+    y_src = y_src[final_mask].astype(int)
 
     # img2에서 유효한 좌표를 출력 이미지로 매핑합니다.
     output_img[y.ravel()[mask], x.ravel()[mask]] = img2[y_src[mask], x_src[mask]]
@@ -56,8 +67,18 @@ def warpImages(img1, img2, H):
 
 def main(image_name):
     # 1. Choose two images 서로 중첩되는 영역이 있는 두 이미지 선택
-    img1 = cv2.imread(f'data/{image_name}_1.jpg', cv2.IMREAD_COLOR)  # 이미지 읽기
-    img2 = cv2.imread(f'data/{image_name}_2.jpg', cv2.IMREAD_COLOR)
+    # 이미지 파일의 경로를 정의합니다.
+    img1_path = f'data/{image_name}_1.jpg'
+    img2_path = f'data/{image_name}_2.jpg'
+
+    # 이미지 파일이 존재하는지 확인합니다.
+    if not os.path.exists(img1_path) or not os.path.exists(img2_path):
+        print(f"Images {img1_path} or {img2_path} not found. Skipping...")
+        return
+
+    # 이미지 파일이 존재하면 읽어옵니다.
+    img1 = cv2.imread(img1_path, cv2.IMREAD_COLOR)
+    img2 = cv2.imread(img2_path, cv2.IMREAD_COLOR)
 
     # 2. compute ORB keypoint and descriptors (opencv) ORB keypoint 및 descriptors 계산
     orb = cv2.ORB_create(nfeatures=2000)  # 웹사이트의 내용에 따라 nfeatures를 2000으로 설정
@@ -76,6 +97,11 @@ def main(image_name):
     good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
     img_matches = cv2.drawMatches(img1, kp1, img2, kp2, good_matches, None)
     cv2.imwrite(f'result/{image_name}_output_matches.jpg', img_matches)
+
+    # 좋은 매치 수 확인
+    if len(good_matches) < 4:
+        print(f"Not enough matches for image {image_name}. Skipping...")
+        return
 
     # 4. implement RANSAC algorithm to compute the homography matrix. (DIY) RANSAC 알고리즘으로 homography matrix 계산
     src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches])
