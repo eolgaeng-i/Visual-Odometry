@@ -132,5 +132,5 @@ def main(image_name):
     print(f"{image_name} 처리 완료!")
 
 if __name__=='__main__':
-    for i in range(1,9):
-        main(f'image{i}')
+    image_number = input("이미지 번호를 입력하세요 (예: 1, 2, ...): ")
+    main(f'image{image_number}')
