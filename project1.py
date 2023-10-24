@@ -57,8 +57,13 @@ def warpImages(img1, img2, H):
     x_src = x_src[final_mask].astype(int)
     y_src = y_src[final_mask].astype(int)
 
+    # 마스크를 사용하여 유효한 좌표만 선택합니다.
+    valid_x = x.ravel()[final_mask]
+    valid_y = y.ravel()[final_mask]
+
     # img2에서 유효한 좌표를 출력 이미지로 매핑합니다.
-    output_img[y.ravel()[mask], x.ravel()[mask]] = img2[y_src[mask], x_src[mask]]
+    output_img[valid_y, valid_x] = img2[y_src, x_src]
+
 
     # img1을 출력 이미지에 오버레이합니다.
     output_img[translation_dist[1]:rows1 + translation_dist[1], translation_dist[0]:cols1 + translation_dist[0]] = img1
