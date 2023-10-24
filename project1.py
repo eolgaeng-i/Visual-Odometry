@@ -41,7 +41,7 @@ def main(image_name):
     matches = bf.knnMatch(des1, des2, k=2)  # 웹사이트의 내용에 따라 knnMatch를 사용
 
     # Lowe's ratio test를 적용하여 좋은 매치만 선택
-    good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
+    good_matches = [m for m, n in matches if m.distance < 0.8 * n.distance]
     img_matches = cv2.drawMatches(img1, kp1, img2, kp2, good_matches, None)
     cv2.imwrite(f'result/{image_name}_output_matches.jpg', img_matches)
 
