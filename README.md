@@ -40,3 +40,8 @@ Submit: link to your github repository
 - Readme.md file must be presented. It should be a short version of the report.
 
 Some students will be presenting the report during the class.
+
+# OpenCV를 사용한 코드와 비교
+  #TODO
+# 순서도
+  #TODO
