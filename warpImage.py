@@ -27,7 +27,12 @@ def warpImages(img1, img2, H):
     H_translation = np.array([[1, 0, translation_dist[0]], [0, 1, translation_dist[1]], [0, 0, 1]])
     H = np.dot(H_translation, H)
 
+    # 5. prepare a panorama image of larger size (DIY) 더 큰 크기의 파노라마 이미지 준비
     # 출력 이미지의 크기를 설정하고 초기화합니다.
+    h1, w1, _ = img1.shape
+    h2, w2, _ = img2.shape
+    # panorama_w = w1 + w2
+    # panorama_h = max(h1, h2)
     output_shape = (y_max - y_min, x_max - x_min, 3)
     output_img = np.zeros(output_shape, dtype=img2.dtype)
 

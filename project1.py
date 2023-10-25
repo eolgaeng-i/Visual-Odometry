@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-from ransac_homography import ransac_homography, calculate_ransac_iterations, apply_homography, find_best_threshold
+from ransac_homography import ransac_homography, calculate_ransac_iterations, apply_homography, find_best_threshold, count_inliers
 from warpImage import warpImages
 import os
 
@@ -37,7 +37,7 @@ def main(image_name):
     # 매치 간의 거리 비율을 사용하여 0.75보다 낮은 매치를 필터링
     good_matches = [m for m, n in matches if m.distance < 0.75 * n.distance]
     img_matches = cv2.drawMatches(img1, kp1, img2, kp2, good_matches, None)
-    cv2.imwrite(f'result/{image_name}_output_matches.jpg', img_matches)
+    cv2.imwrite(f'keypoint_matches/{image_name}_output_matches.jpg', img_matches)
 
     # 좋은 매치 수 확인 특징점이 4개보다 적은 경우 해당 이미지를 건너뜀
     if len(good_matches) < 4:
@@ -53,15 +53,16 @@ def main(image_name):
 
     data = np.hstack((src_pts, dst_pts)) #매칭 리스트
     max_iterations = calculate_ransac_iterations()
-    M, best_threshold = find_best_threshold(data, outlier_ratio, max_iterations)
+    M, best_threshold = find_best_threshold(image_name, data, outlier_ratio, max_iterations)
     print(f"Best threshold: {best_threshold}")
 
-    # 5. prepare a panorama image of larger size (DIY) 더 큰 크기의 파노라마 이미지 준비
-    h1, w1, _ = img1.shape
-    h2, w2, _ = img2.shape
-    # panorama_w = w1 + w2
-    # panorama_h = max(h1, h2)
+    # RANSAC을 사용하여 찾은 inliers를 기반으로 매칭 이미지 생성
+    inliers_idx = count_inliers(M, src_pts, dst_pts, best_threshold)
+    inlier_matches = [good_matches[i] for i in inliers_idx]
+    img_inlier_matches = cv2.drawMatches(img1, kp1, img2, kp2, inlier_matches, None)
+    cv2.imwrite(f'ransac_homography_result/{image_name}_output_inlier_matches.jpg', img_inlier_matches)
 
+    # 5. prepare a panorama image of larger size (DIY) 더 큰 크기의 파노라마 이미지 준비
     # 6. warp two images to the panorama image using the homography matrix (DIY) homography matrix을 사용하여 이미지 왜곡
     panorama = warpImages(img2, img1, M)
 
@@ -72,3 +73,5 @@ def main(image_name):
 if __name__=='__main__':
     image_number = input("이미지 번호를 입력하세요 (예: 1, 2, ...): ")
     main(f'image{image_number}')
+    # for i in range(1,9):
+    #     main(f'image{i}')

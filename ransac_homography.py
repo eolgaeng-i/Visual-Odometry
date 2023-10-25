@@ -43,24 +43,42 @@ def count_inliers(H, src_pts, dst_pts, threshold):
     distances = np.linalg.norm(transformed_pts - dst_pts, axis=1)
     return np.where(distances < threshold)[0]
 
-def find_best_threshold(data, thresholds, max_iterations=100):
+def find_best_threshold(image_name, data, thresholds, max_iterations=100):
     best_threshold = None
     best_model = None
     max_inliers_count = 0
+
+    # inlier 개수를 저장할 리스트 초기화
+    inliers_counts = []
 
     for threshold in thresholds:
         model = ransac_homography(data, max_iterations, threshold)
         src_pts = data[:, :2]
         dst_pts = data[:, 2:]
         inliers_idx = count_inliers(model, src_pts, dst_pts, threshold)
-        
+
+        # 각 threshold에 대한 inlier 개수 저장
+        inliers_counts.append(len(inliers_idx))
+
         # 각 threshold에 대한 inlier 개수 출력
-        print(f"Threshold: {threshold}, Inliers: {len(inliers_idx)}")
+        # print(f"Threshold: {threshold}, Inliers: {len(inliers_idx)}")
         
         if len(inliers_idx) > max_inliers_count:
             max_inliers_count = len(inliers_idx)
             best_model = model
             best_threshold = threshold
+
+    # 그래프 그리기
+    plt.figure(figsize=(10, 6))
+    plt.plot(thresholds, inliers_counts, marker='o', linestyle='-')
+    plt.title('Inliers count by Threshold')
+    plt.xlabel('Threshold')
+    plt.ylabel('Number of Inliers')
+    plt.grid(True)
+    
+    # 그래프를 파일로 저장
+    # plt.savefig(f'ransac_homography_result/{image_name}_inliers_graph.png', dpi=300)
+    # plt.close()
 
     return best_model, best_threshold
 
