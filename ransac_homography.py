@@ -43,6 +43,24 @@ def count_inliers(H, src_pts, dst_pts, threshold):
     distances = np.linalg.norm(transformed_pts - dst_pts, axis=1)
     return np.where(distances < threshold)[0]
 
+def find_best_threshold(data, thresholds, max_iterations=100):
+    best_threshold = None
+    best_model = None
+    max_inliers_count = 0
+
+    for threshold in thresholds:
+        model = ransac_homography(data, max_iterations, threshold)
+        src_pts = data[:, :2]
+        dst_pts = data[:, 2:]
+        inliers_idx = count_inliers(model, src_pts, dst_pts, threshold)
+        
+        if len(inliers_idx) > max_inliers_count:
+            max_inliers_count = len(inliers_idx)
+            best_model = model
+            best_threshold = threshold
+
+    return best_model, best_threshold
+
 # RANSAC 알고리즘을 사용하여 최적의 homography 행렬을 찾는 함수
 def ransac_homography(data, max_iterations=100, threshold=1.0):
     # 최적의 모델 초기화
