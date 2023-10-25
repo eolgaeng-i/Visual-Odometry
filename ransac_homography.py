@@ -54,6 +54,9 @@ def find_best_threshold(data, thresholds, max_iterations=100):
         dst_pts = data[:, 2:]
         inliers_idx = count_inliers(model, src_pts, dst_pts, threshold)
         
+        # 각 threshold에 대한 inlier 개수 출력
+        print(f"Threshold: {threshold}, Inliers: {len(inliers_idx)}")
+        
         if len(inliers_idx) > max_inliers_count:
             max_inliers_count = len(inliers_idx)
             best_model = model
