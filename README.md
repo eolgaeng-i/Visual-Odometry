@@ -18,7 +18,7 @@
   - 소스 코드
   - README.md: 보고서의 짧은 버전입니다.
 
-## 각 폴더 및 작동법 설명
+## 폴더 및 작동법 설명
 ### 폴더 설명
 <dl>
   <dt>data</dt><dd>input 파일, 파노라마를 만들기 위한 한 쌍의 이미지가 저장되어야 함. <strong>image{number}_1.jpg</strong> 형식으로 저장</dd>
